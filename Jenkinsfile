@@ -17,8 +17,8 @@ pipeline{
             steps{
                 withCredentials([sshUserPrivateKey(credentialsId: 'ec2-private-key', keyFileVariable: 'MY_SSH_KEY', usernameVariable: 'username')]){
 
-                    sh "scp -i MY_SSH_KEY -o StrictHostKeyChecking=no myapp.zip ${username}@52.87.159.1:/home/ec2-user/"
-                    sh "scp -i MY_SSH_KEY -o StrictHostKeyChecking=no flaskcommands.txt ${username}@52.87.159.1:/home/ec2-user/"
+                    sh "scp -i $MY_SSH_KEY -o StrictHostKeyChecking=no myapp.zip ${username}@52.87.159.1:/home/ec2-user/"
+                    sh "scp -i $MY_SSH_KEY -o StrictHostKeyChecking=no flaskcommands.txt ${username}@52.87.159.1:/home/ec2-user/"
                     sh "bash flaskcommands.txt"
                 }      
             }
