@@ -24,9 +24,9 @@ pipeline{
 
         stage('Build and Push the Image'){
             steps{
-                echo "env.$IMAGE_TAG"
-                sh 'docker build -t ${env.IMAGE_TAG} .'
-                sh 'docker push ${env.IMAGE_TAG}'
+                //echo "env.$IMAGE_TAG"
+                sh 'docker build -t env.{$IMAGE_NAME}:${env.BUILD_ID} .'
+                sh 'docker push env.{$IMAGE_NAME}:${env.BUILD_ID}'
                 echo 'Docker build and Push was succesful'
             }
         }
