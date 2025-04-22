@@ -2,7 +2,6 @@ pipeline{
     agent any
     environment{
         IMAGE_NAME = 'amar90224/my-images'
-        IMAGE_TAG = '${IMAGE_NAME}:${env.BUILD_ID}'
         KUBECONFIG = credentials('kubeconfig')
         AWS_ACCESS_KEY_ID = credentials('aws-access-key')
         AWS_SECRET_ACCESS_KEY = credentials('aws-secret-key')
@@ -25,9 +24,9 @@ pipeline{
         stage('Build and Push the Image'){
             steps{
                 //echo "env.$IMAGE_TAG"
-                sh 'docker build -t env.${IMAGE_NAME}:${env.BUILD_ID} .'
-                sh 'docker push env.${IMAGE_NAME}:${env.BUILD_ID}'
-                echo 'Docker build and Push was succesful'
+                sh "docker build -t ${env.IMAGE_NAME}:${env.BUILD_ID} ."
+                sh "docker push ${env.IMAGE_NAME}:${env.BUILD_ID}" 
+                echo "Docker build and Push was succesful"
             }
         }
 
