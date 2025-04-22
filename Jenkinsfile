@@ -1,34 +1,58 @@
 pipeline{
     agent any
-
     environment{
-        SERVER_IP = '52.87.159.1'
+        IMAGE_NAME = 'amar90224/my-images'
+        IMAGE_TAG = '${IMAGE_NAME}:${env.BUILD_ID}'
+        KUBECONFIG = credentials('kubeconfig')
+        AWS_ACCESS_KEY_ID = credentials('aws-access-key')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-key')
+
     }
 
     stages{
-        stage('package the code'){
+        stage('Build'){
+            steps {
+                sh 'pip3 install -r requirements.txt'
+            }
+            
+        }
+        stage('Test'){
             steps{
-                sh "zip -r myapp.zip ./* -x .git*"
-                sh "ls -alrt"
+                sh 'pytest'
+            }
+        }
+        stage('DockerHUB Login'){
+            steps{
+                withCredentials([usernamePassword(credentialsId: 'dockercreds', passwordVariable: 'password', usernameVariable: 'username')]) {
+                   sh 'echo $password|docker login -u $username -password-stdin'
+                }
             }
         }
 
-        stage("DeploytoProd"){
+        stage('Build and Push the Image'){
             steps{
-                withCredentials([sshUserPrivateKey(credentialsId: 'ec2-private-key', keyFileVariable: 'MY_SSH_KEY', usernameVariable: 'username')]){
-                    sh "scp -i $MY_SSH_KEY -o StrictHostKeyChecking=no myapp.zip ${username}@${SERVER_IP}:/home/ec2-user/"
-                    sh """
-                    ssh -i $MY_SSH_KEY -o StrictHostKeyChecking=no ${username}@${SERVER_IP} << 
-                    EOF
-                        unzip -o /home/ec2-user/myapp.zip -d /home/ec2-user/pythonflask/
-                        source pythonflask/venv/bin/activate
-                        cd /home/ec2-user/pythonflask/
-                        sudo pip install -r requirements.txt
-                        sudo systemctl restart flaskapp.service
-EOF
-                    """
-                }      
+                sh 'docker build -t ${IMAGE_TAG} .'
+                sh 'docker push ${IMAGE_TAG}'
+                echo 'Docker build and Push was succesful'
+            }
+        }
+
+        stage('Deploy to dev'){
+            steps{
+                sh 'kubectl config user-context jenkins-deployer@dev.us-east-1.eksctl.io'
+                sh 'kubectl config current-context'
+                sh 'kubectl set image deployment/flask-app flask-app=${IMAGE_TAG} '
+
+            }
+        }
+
+        stage('Deploy to Prod'){
+            steps{
+                sh 'kubectl config user-context jenkins-deployer@prod.us-east-1.eksctl.io'
+                sh 'kubectl config current-context'
+                sh 'kubectl set image deployment/flask-app flask-app=${IMAGE_TAG} '
+
             }
         }
     }
-}            
+}
