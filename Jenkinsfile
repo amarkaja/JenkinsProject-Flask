@@ -32,6 +32,9 @@ pipeline{
 
         stage('Deploy to dev'){
             steps{
+                sh 'ls -la $KUBECONFIG'
+                sh 'chmod 644 $KUBECONFIG'
+                sh 'ls -la $KUBECONFIG'
                 sh 'kubectl config use-context jenkins-deployer@dev.us-east-1.eksctl.io'
                 sh 'kubectl config current-context'
                 sh "kubectl set image deployment/flask-app flask-app=${env.IMAGE_NAME}:${env.BUILD_ID}"
