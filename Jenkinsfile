@@ -32,18 +32,18 @@ pipeline{
 
         stage('Deploy to dev'){
             steps{
-                sh 'kubectl config user-context jenkins-deployer@dev.us-east-1.eksctl.io'
+                sh 'kubectl config use-context jenkins-deployer@dev.us-east-1.eksctl.io'
                 sh 'kubectl config current-context'
-                sh 'kubectl set image deployment/flask-app flask-app=${IMAGE_TAG} '
+                sh "kubectl set image deployment/flask-app flask-app=${env.IMAGE_NAME}:${env.BUILD_ID}"
 
             }
         }
 
         stage('Deploy to Prod'){
             steps{
-                sh 'kubectl config user-context jenkins-deployer@prod.us-east-1.eksctl.io'
+                sh 'kubectl config use-context jenkins-deployer@prod.us-east-1.eksctl.io'
                 sh 'kubectl config current-context'
-                sh 'kubectl set image deployment/flask-app flask-app=${IMAGE_TAG} '
+                sh "kubectl set image deployment/flask-app flask-app=${env.IMAGE_NAME}:${env.BUILD_ID}"
 
             }
         }
